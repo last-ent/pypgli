@@ -1,0 +1,11 @@
+[[mydb]]
+  [[mydb.jsonb]]
+    [[mydb.jsonb.QUERY_ALL]]
+      query = "SELECT * FROM jsonb"
+      args = []
+      desc = "Retrieve all rows from jsonb"
+    [[mydb.jsonb.QUERY_FEW]]
+      query = "SELECT * FROM json limit {}"
+      args = ['limit']
+      desc = "Retrieve limited set of results"
+
