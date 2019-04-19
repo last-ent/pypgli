@@ -1,6 +1,9 @@
 import psycopg2
 
+
 class Database:
+    connection = None
+
     def __init__(self, config):
         self.__config = config
         self.reset_connection()
@@ -9,6 +12,8 @@ class Database:
         return self.connection.cursor()
 
     def reset_connection(self):
+        if self.connection:
+            self.connection.close()
         self.connection = self.get_connection(
             self.__config.database,
             self.__config.user,
@@ -20,10 +25,16 @@ class Database:
         cursor.execute(stmt)
         return cursor
 
-    def get_connection(self, database, user, password):
+    def get_connection(self, connection, auto_commit=False):
         print("Starting pgsql connection.")
-        print(database, user, password)
-        return psycopg2.connect(database=database, user=user, password=password)
+        print(connection)
+        conn = psycopg2.connect(
+            database=connection.database,
+            user=connection.user,
+            password=connection.password
+        )
+        conn.autocommit = auto_commit
+        return conn
 
     def get_all_user_tables(self, cursor):
         print("Getting all User Tables.")
@@ -35,14 +46,16 @@ class Database:
             cursor, TABLE_COLUMNS_TEMPLATE.format(table_name)
         ).fetchall()
 
-    def compile(self):
-        conn = get_connection()
-        user_tables = get_all_user_tables(conn.cursor())
+    def compile(self, auto_commit=False):
+        conn = self.get_connection(self.__connection, auto_commit)
+        user_tables = self.get_all_user_tables(conn.cursor())
 
         tables = {}
 
         for utable in user_tables:
             table_name = utable[0]
-            tables[table_name] = get_table_columns(conn.cursor(), table_name)
-        return tables
+            tables[table_name] = self.get_table_columns(conn.cursor(), table_name)
+        self.tables = tables
+
+        return self
 
